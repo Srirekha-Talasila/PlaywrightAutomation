@@ -104,3 +104,148 @@ function formatTimestamp(timestamp: number): string {
  if (key === 'xyz' && typeof value === 'number') {
           result[formatKey(newKey)] = formatTimestamp(value); // Convert long timestamp to formatted date
         }
+		
+		
+		
+		function sanitizeXmlPayload(payload: string): string {
+  return payload
+    .replace(/\\"/g, '"') // Replace escaped quotes with actual quotes
+    .replace(/\n/g, ' ')   // Replace newlines with spaces (or you can choose to remove them)
+    .trim();               // Trim leading and trailing spaces
+}
+
+
+// Define the interface for flattened JSON objects
+interface FlattenedJsonObject {
+  [key: string]: string | number | boolean | null | FlattenedJsonObject | FlattenedJsonObject[];
+}
+
+// Helper function to format a long timestamp to yyyy-mm-dd hh:mm:ss.sss
+function formatTimestamp(timestamp: number): string {
+  const date = new Date(timestamp);
+  const formattedDate = [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-') + ' ' + [
+    String(date.getHours()).padStart(2, '0'),
+    String(date.getMinutes()).padStart(2, '0'),
+    String(date.getSeconds()).padStart(2, '0'),
+  ].join(':') + '.' + String(date.getMilliseconds()).padStart(3, '0'); // Include milliseconds
+
+  return formattedDate;
+}
+
+// Function to sanitize XML payloads
+function sanitizeXmlPayload(payload: string): string {
+  return payload
+    .replace(/\\"/g, '"') // Replace escaped quotes with actual quotes
+    .replace(/\n/g, ' ')   // Replace newlines with spaces (or you can choose to remove them)
+    .trim();               // Trim leading and trailing spaces
+}
+
+// Method to flatten the JSON object
+function flattenJson(
+  obj: FlattenedJsonObject,       // Accepts an object of type FlattenedJsonObject
+  parentKey: string = '',         // Key prefix for recursion
+  result: Record<string, string> = {}  // Result will be a flat object with string values
+): Record<string, string> {
+
+  // Helper function to format keys by replacing underscores with spaces and capitalizing the first letter
+  const formatKey = (key: string): string => {
+    return key
+      .replace(/_/g, ' ')           // Replace underscores with spaces
+      .replace(/^\w/, match => match.toUpperCase()); // Capitalize the first letter
+  };
+
+  // Loop through the keys of the object
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const newKey = parentKey ? `${parentKey} ${key}` : key;  // Build new key with space separator
+
+      const value = obj[key];  // Get the value at the current key
+
+      // If the value is a nested object, recurse
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        flattenJson(value as FlattenedJsonObject, newKey, result);
+      }
+      // If the value is an array, handle each element recursively
+      else if (Array.isArray(value)) {
+        value.forEach((item, index) => {
+          if (typeof item === 'object' && item !== null) {
+            flattenJson(item as FlattenedJsonObject, `${newKey} ${index}`, result);  // Recursively flatten nested objects
+          } else {
+            // Sanitize the string if it's a primitive
+            result[`${newKey} ${index}`] = String(item).replace(/\\"/g, '"');  // Convert primitive array elements to string and replace \" with "
+          }
+        });
+      }
+      // Otherwise, handle primitive values (string, number, boolean, or null)
+      else {
+        // If the value is a string, sanitize it, otherwise convert directly
+        result[formatKey(newKey)] = typeof value === 'string'
+          ? sanitizeXmlPayload(value)
+          : value !== null ? String(value).replace(/\\"/g, '"') : 'null';  // Convert value to string, handle null case and replace \" with "
+      }
+    }
+  }
+
+  return result;
+}
+
+// Function to format datetime fields in the flattened object
+function formatDatetimeFields(result: Record<string, string>): Record<string, string> {
+  const formattedResult: Record<string, string> = {};
+
+  for (const key in result) {
+    if (result.hasOwnProperty(key)) {
+      // Check if the key is one that we want to format as a date
+      if (key.includes('Xyz')) { // Replace with your specific condition for datetime keys
+        const timestamp = parseInt(result[key], 10);
+        if (!isNaN(timestamp)) {
+          formattedResult[key] = formatTimestamp(timestamp);
+        } else {
+          formattedResult[key] = result[key]; // Keep original if not a valid timestamp
+        }
+      } else {
+        formattedResult[key] = result[key]; // Keep original value for other keys
+      }
+    }
+  }
+
+  return formattedResult;
+}
+
+// Example Usage
+const exampleJson: FlattenedJsonObject = {
+  Repotob: {
+    Version: 123,
+    Type: 33,
+    Subrules: [
+      {
+        Id: 1,
+        Test1: "ww",
+        Teste: null,
+        xyz: 1672531199000, // Example long format timestamp (representing a date)
+        note: 'This is a note with a quote: \\"example\\".' // Example of a string with escaped quotes
+      },
+      {
+        Id: "1q",
+        Test1: "wwq",
+        Teste: null,
+        xyz: 1672617599000, // Another long format timestamp
+        comment: 'Another example with \\"escaped quotes\\" here.', // Another example
+        xmlPayload: "<data>\n  <item>\\"Value\\"</item>\n</data>" // Example XML payload
+      }
+    ]
+  }
+};
+
+// Flatten the JSON object
+const flattened = flattenJson(exampleJson);
+
+// Format datetime fields in the flattened result
+const formattedFlattened = formatDatetimeFields(flattened);
+
+// Log the flattened and formatted result
+console.log('Formatted Flattened JSON:', formattedFlattened);
