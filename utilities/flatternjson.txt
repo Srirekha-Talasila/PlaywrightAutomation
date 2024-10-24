@@ -81,3 +81,26 @@ const flattened = flattenJson(exampleJson);
 
 // Log the flattened result
 console.log('Flattened JSON:', flattened);
+
+
+
+// Helper function to format a long timestamp to yyyy-mm-dd hh:mm:ss.sss
+function formatTimestamp(timestamp: number): string {
+  const date = new Date(timestamp);
+  const formattedDate = [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0')
+  ].join('-') + ' ' + [
+    String(date.getHours()).padStart(2, '0'),
+    String(date.getMinutes()).padStart(2, '0'),
+    String(date.getSeconds()).padStart(2, '0')
+  ].join(':') + '.' + String(date.getMilliseconds()).padStart(3, '0'); // Include milliseconds
+  
+  return formattedDate;
+}
+
+
+ if (key === 'xyz' && typeof value === 'number') {
+          result[formatKey(newKey)] = formatTimestamp(value); // Convert long timestamp to formatted date
+        }
