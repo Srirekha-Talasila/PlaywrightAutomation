@@ -1,19 +1,19 @@
-// Type definition for the flattened result (string keys, and simple value types)
+// Type definition for the flattened result where all values are strings
 type FlattenedJsonType = 
   | string
   | number
   | boolean
   | null
-  | FlattenedJsonType[]
-  | { [key: string]: FlattenedJsonType };
+  | FlattenedJsonType[]  // Array of any FlattenedJsonType (including nested arrays)
+  | { [key: string]: FlattenedJsonType };  // Nested JSON objects
 
-// Flatten JSON Function
+// Flatten JSON Function returning values as strings
 function flattenJson(
   obj: FlattenedJsonType,           // Accepts JSON object with FlattenedJsonType
   parentKey: string = '',           // Key prefix for recursion
-  result: Record<string, string | number | boolean> = {}  // The result will be a flat object
-): Record<string, string | number | boolean> {
-  
+  result: Record<string, string> = {}  // The result will be a flat object with string values
+): Record<string, string> {
+
   // Helper function to format the key (capitalize first word, replace underscores with spaces)
   const formatKey = (key: string): string => {
     return key
@@ -21,17 +21,17 @@ function flattenJson(
       .replace(/^\w/, match => match.toUpperCase()); // Capitalize first letter of the first word
   };
 
-  // Check if the object is not an object or is null (handle primitive values)
+  // Check if the object is a primitive value (string, number, boolean, or null)
   if (typeof obj !== 'object' || obj === null) {
     if (obj !== null) {
-      result[formatKey(parentKey)] = obj; // Store primitive value
+      result[formatKey(parentKey)] = String(obj); // Convert value to string
     }
     return result;
   }
 
   // If the object is an array, handle each element recursively
   if (Array.isArray(obj)) {
-    obj.forEach((item, index) => {
+    obj.forEach((item: FlattenedJsonType, index: number) => {
       flattenJson(item, `${parentKey} ${index}`, result); // Recurse for each array element
     });
   } else {
@@ -43,15 +43,15 @@ function flattenJson(
 
         if (Array.isArray(value)) {
           // Handle arrays explicitly
-          value.forEach((item, index) => {
+          value.forEach((item: FlattenedJsonType, index: number) => {
             flattenJson(item, `${newKey} ${index}`, result); // Recurse for each array item
           });
         } else if (typeof value === 'object' && value !== null) {
           // Handle nested objects
           flattenJson(value, newKey, result);
         } else if (value !== null) {
-          // Handle primitive values (skip nulls)
-          result[formatKey(newKey)] = value;
+          // Convert primitive values to strings
+          result[formatKey(newKey)] = String(value);
         }
       }
     }
