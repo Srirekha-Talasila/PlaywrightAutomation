@@ -1,58 +1,54 @@
-// Type definition for the flattened result where all values are strings
-type FlattenedJsonType = 
-  | string
-  | number
-  | boolean
-  | null
-  | FlattenedJsonType[]  // Array of any FlattenedJsonType (including nested arrays)
-  | { [key: string]: FlattenedJsonType };  // Nested JSON objects
+// Define the interface for the flattened JSON object
+interface FlattenedJsonObject {
+  [key: string]: 
+    | string
+    | string[]
+    | number
+    | number[]
+    | boolean
+    | null
+    | FlattenedJsonObject      // For nested objects
+    | FlattenedJsonObject[];   // For arrays of nested objects
+}
 
-// Flatten JSON Function returning values as strings
+// Method to flatten the JSON object
 function flattenJson(
-  obj: FlattenedJsonType,           // Accepts JSON object with FlattenedJsonType
-  parentKey: string = '',           // Key prefix for recursion
-  result: Record<string, string> = {}  // The result will be a flat object with string values
+  obj: FlattenedJsonObject,       // Accepts an object of type FlattenedJsonObject
+  parentKey: string = '',         // Key prefix for recursion
+  result: Record<string, string> = {}  // Result will be a flat object with string values
 ): Record<string, string> {
 
-  // Helper function to format the key (capitalize first word, replace underscores with spaces)
+  // Helper function to format keys by replacing underscores with spaces and capitalizing first letter
   const formatKey = (key: string): string => {
     return key
-      .replace(/_/g, ' ') // Replace underscores with spaces
-      .replace(/^\w/, match => match.toUpperCase()); // Capitalize first letter of the first word
+      .replace(/_/g, ' ')           // Replace underscores with spaces
+      .replace(/^\w/, match => match.toUpperCase()); // Capitalize the first letter
   };
 
-  // Check if the object is a primitive value (string, number, boolean, or null)
-  if (typeof obj !== 'object' || obj === null) {
-    if (obj !== null) {
-      result[formatKey(parentKey)] = String(obj); // Convert value to string
-    }
-    return result;
-  }
+  // Loop through the keys of the object
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const newKey = parentKey ? `${parentKey} ${key}` : key;  // Build new key with space separator
 
-  // If the object is an array, handle each element recursively
-  if (Array.isArray(obj)) {
-    obj.forEach((item: FlattenedJsonType, index: number) => {
-      flattenJson(item, `${parentKey} ${index}`, result); // Recurse for each array element
-    });
-  } else {
-    // Iterate over the keys in the object
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        const newKey = parentKey ? `${parentKey}_${key}` : key;
-        const value = obj[key];
+      const value = obj[key];  // Get the value at the current key
 
-        if (Array.isArray(value)) {
-          // Handle arrays explicitly
-          value.forEach((item: FlattenedJsonType, index: number) => {
-            flattenJson(item, `${newKey} ${index}`, result); // Recurse for each array item
-          });
-        } else if (typeof value === 'object' && value !== null) {
-          // Handle nested objects
-          flattenJson(value, newKey, result);
-        } else if (value !== null) {
-          // Convert primitive values to strings
-          result[formatKey(newKey)] = String(value);
-        }
+      // If the value is a nested object, recurse
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        flattenJson(value as FlattenedJsonObject, newKey, result);
+      }
+      // If the value is an array, handle each element recursively
+      else if (Array.isArray(value)) {
+        value.forEach((item, index) => {
+          if (typeof item === 'object' && item !== null) {
+            flattenJson(item as FlattenedJsonObject, `${newKey} ${index}`, result);  // Recursively flatten nested objects
+          } else {
+            result[`${newKey} ${index}`] = String(item);  // Convert primitive array elements to string
+          }
+        });
+      }
+      // Otherwise, handle primitive values (string, number, boolean, or null)
+      else if (value !== null) {
+        result[formatKey(newKey)] = String(value);  // Convert value to string and add to result
       }
     }
   }
@@ -60,8 +56,8 @@ function flattenJson(
   return result;
 }
 
-// Example usage
-const complexJson: FlattenedJsonType = {
+// Example Usage
+const exampleJson: FlattenedJsonObject = {
   Repotob: {
     Version: 123,
     Type: 33,
@@ -80,6 +76,8 @@ const complexJson: FlattenedJsonType = {
   }
 };
 
-// Flatten the JSON and log the result
-const flattened = flattenJson(complexJson);
+// Flatten the JSON object
+const flattened = flattenJson(exampleJson);
+
+// Log the flattened result
 console.log('Flattened JSON:', flattened);
