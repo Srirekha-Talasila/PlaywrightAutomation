@@ -1,0 +1,255 @@
+import oracledb from 'oracledb';
+import fs from 'fs';
+
+// Define the configuration type for Oracle Database connection
+interface OracleDBConfig {
+  user: string;
+  password: string;
+  connectString: string;
+}
+
+export class OracleDatabaseUtility {
+  private connection: oracledb.Connection | null = null;
+  private config: OracleDBConfig;
+
+  // Constructor that takes the OracleDBConfig as an argument
+  constructor(config: OracleDBConfig) {
+    this.config = config;
+  }
+
+  // Establish a database connection
+  async connect(): Promise<void> {
+    try {
+      this.connection = await oracledb.getConnection(this.config);
+      console.log('Connected to Oracle Database');
+    } catch (error) {
+      console.error('Error connecting to Oracle Database:', error);
+      throw error;
+    }
+  }
+
+  // Close the database connection
+  async closeConnection(): Promise<void> {
+    try {
+      if (this.connection) {
+        await this.connection.close();
+        console.log('Oracle Database connection closed');
+      }
+    } catch (error) {
+      console.error('Error closing Oracle Database connection:', error);
+      throw error;
+    }
+  }
+
+  // Execute an INSERT statement
+  async insert(query: string, binds: any[] = []): Promise<void> {
+    try {
+      if (this.connection) {
+        await this.connection.execute(query, binds, { autoCommit: true });
+        console.log('Data inserted successfully');
+      } else {
+        console.error('No database connection available');
+      }
+    } catch (error) {
+      console.error('Error inserting data:', error);
+      throw error;
+    }
+  }
+
+  // Execute an UPDATE statement
+  async update(query: string, binds: any[] = []): Promise<void> {
+    try {
+      if (this.connection) {
+        await this.connection.execute(query, binds, { autoCommit: true });
+        console.log('Data updated successfully');
+      } else {
+        console.error('No database connection available');
+      }
+    } catch (error) {
+      console.error('Error updating data:', error);
+      throw error;
+    }
+  }
+
+  // Execute a SELECT statement and return rows
+  async read(query: string, binds: any[] = []): Promise<Record<string, any>[]> {
+    try {
+      if (this.connection) {
+        const result = await this.connection.execute(query, binds);
+        console.log('Data retrieved successfully');
+        return result.rows as Record<string, any>[];  // Assert rows as array of records
+      } else {
+        console.error('No database connection available');
+        return [];
+      }
+    } catch (error) {
+      console.error('Error reading data:', error);
+      throw error;
+    }
+  }
+
+  // Execute a DELETE statement
+  async delete(query: string, binds: any[] = []): Promise<void> {
+    try {
+      if (this.connection) {
+        await this.connection.execute(query, binds, { autoCommit: true });
+        console.log('Data deleted successfully');
+      } else {
+        console.error('No database connection available');
+      }
+    } catch (error) {
+      console.error('Error deleting data:', error);
+      throw error;
+    }
+  }
+
+  // Execute multiple INSERT statements from a file containing SQL insert commands
+  async insertFromFile(filePath: string): Promise<void> {
+    const sqlStatements = fs.readFileSync(filePath, 'utf8').split(';');
+
+    for (const statement of sqlStatements) {
+      const trimmedStatement = statement.trim();
+      if (trimmedStatement) {
+        await this.insert(trimmedStatement);
+      }
+    }
+    console.log('All data from file inserted successfully');
+  }
+
+  // Execute a SELECT statement without any bindings
+  async readWithQuery(query: string): Promise<Record<string, any>[]> {
+    return await this.read(query, []); // Call the existing read method with empty bindings
+  }
+}
+
+
+-----------------
+
+import sql, { ConnectionPool } from 'mssql';
+import fs from 'fs';
+
+// Define the configuration type for SQL Server connection
+interface SQLServerDBConfig {
+  user: string;
+  password: string;
+  server: string;
+  database: string;
+  port?: number; // Optional port
+}
+
+export class SQLServerDatabaseUtility {
+  private pool: ConnectionPool | null = null;
+  private config: SQLServerDBConfig;
+
+  // Constructor that takes the SQLServerDBConfig as an argument
+  constructor(config: SQLServerDBConfig) {
+    this.config = config;
+  }
+
+  // Establish a database connection
+  async connect(): Promise<void> {
+    try {
+      this.pool = await sql.connect(this.config);
+      console.log('Connected to SQL Server Database');
+    } catch (error) {
+      console.error('Error connecting to SQL Server Database:', error);
+      throw error;
+    }
+  }
+
+  // Close the database connection
+  async closeConnection(): Promise<void> {
+    try {
+      if (this.pool) {
+        await this.pool.close();
+        console.log('SQL Server Database connection closed');
+      }
+    } catch (error) {
+      console.error('Error closing SQL Server Database connection:', error);
+      throw error;
+    }
+  }
+
+  // Execute an INSERT statement
+  async insert(query: string, binds: any[] = []): Promise<void> {
+    try {
+      if (this.pool) {
+        await this.pool.request()
+          .query(query, binds);
+        console.log('Data inserted successfully');
+      } else {
+        console.error('No database connection available');
+      }
+    } catch (error) {
+      console.error('Error inserting data:', error);
+      throw error;
+    }
+  }
+
+  // Execute an UPDATE statement
+  async update(query: string, binds: any[] = []): Promise<void> {
+    try {
+      if (this.pool) {
+        await this.pool.request()
+          .query(query, binds);
+        console.log('Data updated successfully');
+      } else {
+        console.error('No database connection available');
+      }
+    } catch (error) {
+      console.error('Error updating data:', error);
+      throw error;
+    }
+  }
+
+  // Execute a SELECT statement and return rows
+  async read(query: string, binds: any[] = []): Promise<Record<string, any>[]> {
+    try {
+      if (this.pool) {
+        const result = await this.pool.request().query(query, binds);
+        console.log('Data retrieved successfully');
+        return result.recordset as Record<string, any>[];  // Return the result set
+      } else {
+        console.error('No database connection available');
+        return [];
+      }
+    } catch (error) {
+      console.error('Error reading data:', error);
+      throw error;
+    }
+  }
+
+  // Execute a DELETE statement
+  async delete(query: string, binds: any[] = []): Promise<void> {
+    try {
+      if (this.pool) {
+        await this.pool.request()
+          .query(query, binds);
+        console.log('Data deleted successfully');
+      } else {
+        console.error('No database connection available');
+      }
+    } catch (error) {
+      console.error('Error deleting data:', error);
+      throw error;
+    }
+  }
+
+  // Execute multiple INSERT statements from a file containing SQL insert commands
+  async insertFromFile(filePath: string): Promise<void> {
+    const sqlStatements = fs.readFileSync(filePath, 'utf8').split(';');
+
+    for (const statement of sqlStatements) {
+      const trimmedStatement = statement.trim();
+      if (trimmedStatement) {
+        await this.insert(trimmedStatement);
+      }
+    }
+    console.log('All data from file inserted successfully');
+  }
+
+  // Execute a SELECT statement without any bindings
+  async readWithQuery(query: string): Promise<Record<string, any>[]> {
+    return await this.read(query, []); // Call the existing read method with empty bindings
+  }
+}

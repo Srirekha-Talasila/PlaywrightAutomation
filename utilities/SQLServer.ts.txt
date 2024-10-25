@@ -1,0 +1,107 @@
+import fs from 'fs';
+import sql, { ConnectionPool } from 'mssql';
+
+export class SqlServerUtils {
+    private pool: ConnectionPool | null = null;
+
+    constructor(
+        private config: {
+            user: string;
+            password: string;
+            server: string;
+            database: string;
+            port?: number;
+            options?: {
+                encrypt?: boolean; // Use true for Azure
+                trustServerCertificate?: boolean; // Use true for self-signed certs
+            };
+        }
+    ) {}
+
+    // Establishes a connection to the SQL Server database
+    public async formConnection(): Promise<void> {
+        try {
+            this.pool = await sql.connect(this.config);
+            console.log('Connection established successfully.');
+        } catch (error) {
+            console.error('Error establishing connection:', error);
+            throw error;
+        }
+    }
+
+    // Method to execute a single SQL query (for any CRUD operation)
+    private async executeQuery(query: string): Promise<void> {
+        if (!this.pool) throw new Error('No connection established.');
+
+        try {
+            await this.pool.request().query(query.trim());
+            console.log(`Executed: ${query.trim()}`);
+        } catch (error) {
+            console.error(`Error executing query: ${query.trim()}`, error);
+            throw error; // Rethrow or handle as needed
+        }
+    }
+
+    // Method to execute a .sql file containing INSERT statements
+    public async executeSqlFile(filePath: string): Promise<void> {
+        if (!this.pool) throw new Error('No connection established.');
+
+        try {
+            // Read the SQL file content
+            const sqlContent = fs.readFileSync(filePath, 'utf-8');
+
+            // Split the SQL content by semicolon
+            const sqlStatements = sqlContent.split(/;\s*$/gm).filter(statement => statement.trim());
+
+            for (const statement of sqlStatements) {
+                await this.executeQuery(statement); // Reusing the executeQuery method
+            }
+
+            console.log('All INSERT statements executed successfully.');
+        } catch (error) {
+            console.error('Error executing SQL file:', error);
+            throw error;
+        }
+    }
+
+    // Method for creating a new record
+    public async createRecord(query: string): Promise<void> {
+        await this.executeQuery(query);
+    }
+
+    // Method for reading records
+    public async readRecords(query: string): Promise<any[]> {
+        if (!this.pool) throw new Error('No connection established.');
+
+        try {
+            const result = await this.pool.request().query(query);
+            return result.recordset; // Return the recordset from the query
+        } catch (error) {
+            console.error('Error reading records:', error);
+            throw error;
+        }
+    }
+
+    // Method for updating a record
+    public async updateRecord(query: string): Promise<void> {
+        await this.executeQuery(query);
+    }
+
+    // Method for deleting a record
+    public async deleteRecord(query: string): Promise<void> {
+        await this.executeQuery(query);
+    }
+
+    // Closes the SQL Server connection
+    public async closeConnection(): Promise<void> {
+        if (this.pool) {
+            try {
+                await this.pool.close();
+                console.log('Connection closed successfully.');
+            } catch (error) {
+                console.error('Error closing connection:', error);
+                throw error;
+            }
+        }
+    }
+}
