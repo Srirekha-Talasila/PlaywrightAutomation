@@ -1,7 +1,7 @@
 import sql from 'mssql';
 import * as fs from 'fs/promises';
 
-export class SQLServerUtility {
+export class SQLServerUtility1 {
     private pool: sql.ConnectionPool;
 
     constructor(config: sql.config) {
@@ -53,14 +53,27 @@ export class SQLServerUtility {
         return result.rowsAffected[0]; // Return the number of rows affected
     }
 
-    // Helper method to get query from a file or use raw query
-    private async getQuery(queryOrFile: string, params?: Record<string, any>): Promise<string> {
-        if (params) {
-            return queryOrFile; // Return the raw query if params are provided
+    private async getQuery(queryOrFile: string, binds?: Record<string, any>): Promise<string> {
+        // If binds are provided, we assume it's a raw query
+        if (binds) {
+            return queryOrFile; // Return the raw query if binds are provided
         } else {
-            return this.readSQLFile(queryOrFile); // Read from .sql file if no params
+            // If no binds, check if the input is a file path or a raw query
+            try {
+                const stats = await fs.stat(queryOrFile); // Check if it's a file
+                if (stats.isFile()) {
+                    return await this.readSQLFile(queryOrFile); // Read from .sql file if it's a file
+                }
+            } catch (err) {
+                // If an error occurs (e.g., file doesn't exist), treat it as a raw query
+                console.warn(`Could not read from file ${queryOrFile}, treating as raw query: ${err}`);
+                return queryOrFile; // Return it as a raw query
+            }
+            // If it's not a file, return it as a raw query
+            return queryOrFile;
         }
     }
+    
 
     // Helper method to execute query with or without parameters
     private async executeQuery(query: string, params?: Record<string, any>): Promise<sql.IResult<any>> {
