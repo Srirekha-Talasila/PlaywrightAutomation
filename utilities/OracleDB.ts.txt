@@ -253,3 +253,59 @@ export class SQLServerDatabaseUtility {
     return await this.read(query, []); // Call the existing read method with empty bindings
   }
 }
+
+
+ // Method to execute an insert query with bindings
+    async insert(query: string, params: Record<string, any>): Promise<void> {
+        try {
+            const request = this.pool.request();
+
+            // Bind parameters dynamically
+            for (const key in params) {
+                request.input(key, this.getSqlType(params[key]), params[key]);
+            }
+
+            // Execute the insert query
+            await request.query(query);
+            console.log('Insert query executed successfully');
+        } catch (error) {
+            console.error('Insert failed:', error);
+            throw error; // Rethrow the error for further handling
+        }
+    }
+
+    private getSqlType(value: any): sql.ISqlType {
+        // Determine the SQL type based on the value
+        if (typeof value === 'string') {
+            return sql.NVarChar;
+        } else if (typeof value === 'number') {
+            return Number.isInteger(value) ? sql.Int : sql.Decimal(10, 2);
+        } else if (value instanceof Date) {
+            return sql.DateTime;
+        } else if (Buffer.isBuffer(value)) {
+            return sql.VarBinary;
+        } else {
+            throw new Error(`Unsupported type for value: ${value}`);
+        }
+    }
+
+
+    // Generic method to execute a SQL query with bindings
+    async executeQuery(query: string, params: Record<string, any>): Promise<any> {
+        try {
+            const request = this.pool.request();
+
+            // Bind parameters dynamically
+            for (const key in params) {
+                request.input(key, this.getSqlType(params[key]), params[key]);
+            }
+
+            // Execute the query
+            const result = await request.query(query);
+            console.log('Query executed successfully:', result);
+            return result;
+        } catch (error) {
+            console.error('Query execution failed:', error);
+            throw error; // Rethrow the error for further handling
+        }
+    }
