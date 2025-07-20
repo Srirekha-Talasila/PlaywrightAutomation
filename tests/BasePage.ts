@@ -649,5 +649,68 @@ async getCount(locator: Locator, description?: string): Promise<number> {
       throw error;
     }
   }
+
+  export class BasePage {
+  protected page: Page;
+
+  private clickActions: ClickActions;
+  private formActions: FormActions;
+  private assertions: Assertions;
+  private waitActions: WaitActions;
+
+  constructor(page: Page) {
+    this.page = page;
+    this.clickActions = new ClickActions(page);
+    this.formActions = new FormActions(page);
+    this.assertions = new Assertions(page);
+    this.waitActions = new WaitActions(page);
+  }
+
+  // Click wrappers
+  async click(locator: Locator, description?: string, timeout?: number) {
+    return this.clickActions.click(locator, description, timeout);
+  }
+  async doubleClick(locator: Locator, description?: string, timeout?: number) {
+    return this.clickActions.doubleClick(locator, description, timeout);
+  }
+
+  // Form wrappers
+  async sendKeys(locator: Locator, text: string, description?: string, timeout?: number) {
+    return this.formActions.sendKeys(locator, text, description, timeout);
+  }
+  async check(locator: Locator, description?: string, timeout?: number) {
+    return this.formActions.check(locator, description, timeout);
+  }
+  async uncheck(locator: Locator, description?: string, timeout?: number) {
+    return this.formActions.uncheck(locator, description, timeout);
+  }
+
+  // Assertions
+  async expectVisible(locator: Locator, description?: string) {
+    return this.assertions.expectVisible(locator, description);
+  }
+  async expectText(locator: Locator, expectedText: string, description?: string) {
+    return this.assertions.expectText(locator, expectedText, description);
+  }
+
+  // Waits
+  async waitForVisible(locator: Locator, timeout?: number) {
+    return this.waitActions.waitForVisible(locator, timeout);
+  }
+  async waitForHidden(locator: Locator, timeout?: number) {
+    return this.waitActions.waitForHidden(locator, timeout);
+  }
+  async waitForEnabled(locator: Locator, timeout?: number) {
+    return this.waitActions.waitForEnabled(locator, timeout);
+  }
+
+  // Core navigation
+  async navigate(url: string) {
+    await this.page.goto(url);
+  }
+  async refresh() {
+    await this.page.reload();
+  }
+}
   
 }
