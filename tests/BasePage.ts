@@ -382,5 +382,108 @@ async refreshPage(
     throw error;
   }
 }
+
+  // Wait for element to be visible
+async waitForVisible(
+  locator: Locator,
+  description?: string,
+  timeout = 10000
+): Promise<void> {
+  const desc = description || locator.toString();
+  try {
+    logger.info(`[${this.className}] ⏳ Waiting for visible: ${desc}`);
+    await locator.waitFor({ state: 'visible', timeout });
+    this.logSuccess('Wait For Visible', desc);
+  } catch (error) {
+    this.logFailure('Wait For Visible', error, desc);
+    throw error;
+  }
+}
+
+// Wait for element to be hidden
+async waitForHidden(
+  locator: Locator,
+  description?: string,
+  timeout = 10000
+): Promise<void> {
+  const desc = description || locator.toString();
+  try {
+    logger.info(`[${this.className}] ⏳ Waiting for hidden: ${desc}`);
+    await locator.waitFor({ state: 'hidden', timeout });
+    this.logSuccess('Wait For Hidden', desc);
+  } catch (error) {
+    this.logFailure('Wait For Hidden', error, desc);
+    throw error;
+  }
+}
+
+// Wait for element to be attached to DOM
+async waitForAttached(
+  locator: Locator,
+  description?: string,
+  timeout = 10000
+): Promise<void> {
+  const desc = description || locator.toString();
+  try {
+    logger.info(`[${this.className}] ⏳ Waiting for attached: ${desc}`);
+    await locator.waitFor({ state: 'attached', timeout });
+    this.logSuccess('Wait For Attached', desc);
+  } catch (error) {
+    this.logFailure('Wait For Attached', error, desc);
+    throw error;
+  }
+}
+
+// Wait for element to be detached (removed) from DOM
+async waitForDetached(
+  locator: Locator,
+  description?: string,
+  timeout = 10000
+): Promise<void> {
+  const desc = description || locator.toString();
+  try {
+    logger.info(`[${this.className}] ⏳ Waiting for detached: ${desc}`);
+    await locator.waitFor({ state: 'detached', timeout });
+    this.logSuccess('Wait For Detached', desc);
+  } catch (error) {
+    this.logFailure('Wait For Detached', error, desc);
+    throw error;
+  }
+}
+
+// Wait for URL to match a pattern or string
+async waitForUrl(
+  url: string | RegExp | ((url: URL) => boolean),
+  description?: string,
+  timeout = 10000
+): Promise<void> {
+  const desc = description || `URL to match ${url.toString()}`;
+  try {
+    logger.info(`[${this.className}] ⏳ Waiting for URL: ${desc}`);
+    await this.page.waitForURL(url, { timeout });
+    this.logSuccess('Wait For URL', desc);
+  } catch (error) {
+    this.logFailure('Wait For URL', error, desc);
+    throw error;
+  }
+}
+
+// Wait for page load/navigation event (load, domcontentloaded, networkidle)
+async waitForLoadState(
+  state: 'load' | 'domcontentloaded' | 'networkidle' = 'load',
+  description?: string,
+  timeout = 10000
+): Promise<void> {
+  const desc = description || `Page to reach load state: ${state}`;
+  try {
+    logger.info(`[${this.className}] ⏳ Waiting for load state: ${state}`);
+    await this.page.waitForLoadState(state, { timeout });
+    this.logSuccess('Wait For Load State', desc);
+  } catch (error) {
+    this.logFailure('Wait For Load State', error, desc);
+    throw error;
+  }
+}
+
   
 }
