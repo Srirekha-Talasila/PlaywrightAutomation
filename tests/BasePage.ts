@@ -353,5 +353,34 @@ async hover(
     throw error;
   }
 }
+
+  async navigate(
+  url: string,
+  timeout: number = 30000
+): Promise<void> {
+  try {
+    logger.info(`[${this.className}] 🌐 Navigating to: ${url}`);
+    await this.page.goto(url, { waitUntil: 'load', timeout });
+    this.logSuccess('Navigate', url);
+  } catch (error) {
+    this.logFailure('Navigate', error, url);
+    throw error;
+  }
+}
+
+async refreshPage(
+  timeout: number = 30000,
+  description?: string
+): Promise<void> {
+  const desc = description || 'Page refresh';
+  try {
+    logger.info(`[${this.className}] 🔄 Refreshing page`);
+    await this.page.reload({ timeout, waitUntil: 'load' });
+    this.logSuccess('Refresh Page', desc);
+  } catch (error) {
+    this.logFailure('Refresh Page', error, desc);
+    throw error;
+  }
+}
   
 }
