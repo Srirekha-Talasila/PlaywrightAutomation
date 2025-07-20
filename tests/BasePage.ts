@@ -106,4 +106,98 @@ export class BasePage {
   }
 
   // Add other methods similarly, accepting Locator only
+
+  // Uncheck Checkbox
+async uncheck(
+  locator: Locator,
+  description?: string,
+  timeout?: number
+): Promise<void> {
+  const desc = description || locator.toString();
+  try {
+    logger.info(`[${this.className}] ☑️ Uncheck: ${desc}`);
+    await locator.uncheck({ timeout });
+    this.logSuccess('Uncheck', desc);
+  } catch (error) {
+    this.logFailure('Uncheck', error, desc);
+    throw error;
+  }
+}
+
+// Get Text Content
+async getText(
+  locator: Locator,
+  description?: string,
+  timeout?: number
+): Promise<string> {
+  const desc = description || locator.toString();
+  try {
+    logger.info(`[${this.className}] 📄 Get text from: ${desc}`);
+    // Playwright Locator doesn't support timeout on textContent, so use waitFor with timeout
+    await locator.waitFor({ state: 'visible', timeout });
+    const text = await locator.textContent();
+    this.logSuccess('Get Text', desc);
+    return text?.trim() || '';
+  } catch (error) {
+    this.logFailure('Get Text', error, desc);
+    throw error;
+  }
+}
+
+// Press Keyboard Key
+async pressKey(
+  key: string,
+  description?: string
+): Promise<void> {
+  const desc = description || key;
+  try {
+    logger.info(`[${this.className}] ⌨️ Press key: ${desc}`);
+    await this.keyboard.press(key);
+    this.logSuccess('Press Key', desc);
+  } catch (error) {
+    this.logFailure('Press Key', error, desc);
+    throw error;
+  }
+}
+
+// Scroll Into View
+async scrollIntoView(
+  locator: Locator,
+  description?: string,
+  timeout?: number
+): Promise<void> {
+  const desc = description || locator.toString();
+  try {
+    logger.info(`[${this.className}] ↕️ Scroll into view: ${desc}`);
+    await locator.scrollIntoViewIfNeeded({ timeout });
+    this.logSuccess('Scroll Into View', desc);
+  } catch (error) {
+    this.logFailure('Scroll Into View', error, desc);
+    throw error;
+  }
+}
+
+// Download File
+async downloadFile(
+  locator: Locator,
+  downloadDir: string,
+  description?: string,
+  timeout?: number
+): Promise<string> {
+  const desc = description || locator.toString();
+  try {
+    logger.info(`[${this.className}] 📥 Download file from: ${desc}`);
+    const [download] = await Promise.all([
+      this.page.waitForEvent('download', { timeout }),
+      locator.click(),
+    ]);
+    const savePath = `${downloadDir}/${await download.suggestedFilename()}`;
+    await download.saveAs(savePath);
+    this.logSuccess('Download File', desc);
+    return savePath;
+  } catch (error) {
+    this.logFailure('Download File', error, desc);
+    throw error;
+  }
+}
 }
