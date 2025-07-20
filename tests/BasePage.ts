@@ -200,4 +200,158 @@ async downloadFile(
     throw error;
   }
 }
+
+  // Select Dropdown by Visible Text
+async selectByVisibleText(
+  locator: Locator,
+  visibleText: string,
+  description?: string,
+  timeout?: number
+): Promise<void> {
+  const desc = description || locator.toString();
+  try {
+    logger.info(`[${this.className}] 🔽 Select "${visibleText}" from dropdown: ${desc}`);
+    await locator.selectOption({ label: visibleText, timeout });
+    this.logSuccess(`Select By Visible Text "${visibleText}"`, desc);
+  } catch (error) {
+    this.logFailure(`Select By Visible Text "${visibleText}"`, error, desc);
+    throw error;
+  }
+}
+
+// Select Dropdown by Value
+async selectByValue(
+  locator: Locator,
+  value: string,
+  description?: string,
+  timeout?: number
+): Promise<void> {
+  const desc = description || locator.toString();
+  try {
+    logger.info(`[${this.className}] 🔽 Select value="${value}" from dropdown: ${desc}`);
+    await locator.selectOption({ value, timeout });
+    this.logSuccess(`Select By Value "${value}"`, desc);
+  } catch (error) {
+    this.logFailure(`Select By Value "${value}"`, error, desc);
+    throw error;
+  }
+}
+
+// Check Checkbox
+async check(
+  locator: Locator,
+  description?: string,
+  timeout?: number
+): Promise<void> {
+  const desc = description || locator.toString();
+  try {
+    logger.info(`[${this.className}] ☑️ Check: ${desc}`);
+    await locator.check({ timeout });
+    this.logSuccess('Check', desc);
+  } catch (error) {
+    this.logFailure('Check', error, desc);
+    throw error;
+  }
+}
+
+// Uncheck Checkbox
+async uncheck(
+  locator: Locator,
+  description?: string,
+  timeout?: number
+): Promise<void> {
+  const desc = description || locator.toString();
+  try {
+    logger.info(`[${this.className}] ☑️ Uncheck: ${desc}`);
+    await locator.uncheck({ timeout });
+    this.logSuccess('Uncheck', desc);
+  } catch (error) {
+    this.logFailure('Uncheck', error, desc);
+    throw error;
+  }
+}
+
+// Get Text
+async getText(
+  locator: Locator,
+  description?: string,
+  timeout?: number
+): Promise<string> {
+  const desc = description || locator.toString();
+  try {
+    logger.info(`[${this.className}] 📄 Get text from: ${desc}`);
+    await locator.waitFor({ state: 'visible', timeout }); // ensure visible before getText
+    const text = await locator.textContent();
+    this.logSuccess('Get Text', desc);
+    return text?.trim() || '';
+  } catch (error) {
+    this.logFailure('Get Text', error, desc);
+    throw error;
+  }
+}
+
+// Is Displayed (Visible)
+async isDisplayed(
+  locator: Locator,
+  timeout?: number
+): Promise<boolean> {
+  try {
+    // Playwright doesn't support timeout on isVisible, so emulate with waitFor + catch
+    await locator.waitFor({ state: 'visible', timeout });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Is Enabled
+async isEnabled(
+  locator: Locator,
+  timeout?: number
+): Promise<boolean> {
+  try {
+    const start = Date.now();
+    while (!await locator.isEnabled()) {
+      if (timeout && Date.now() - start > timeout) return false;
+      await new Promise(r => setTimeout(r, 100));
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Press Keyboard Key
+async pressKey(
+  key: string,
+  description?: string
+): Promise<void> {
+  const desc = description || key;
+  try {
+    logger.info(`[${this.className}] ⌨️ Press key: ${desc}`);
+    await this.keyboard.press(key);
+    this.logSuccess('Press Key', desc);
+  } catch (error) {
+    this.logFailure('Press Key', error, desc);
+    throw error;
+  }
+}
+
+// Hover Over Element
+async hover(
+  locator: Locator,
+  description?: string,
+  timeout?: number
+): Promise<void> {
+  const desc = description || locator.toString();
+  try {
+    logger.info(`[${this.className}] 🖱️ Hover over: ${desc}`);
+    await locator.hover({ timeout });
+    this.logSuccess('Hover', desc);
+  } catch (error) {
+    this.logFailure('Hover', error, desc);
+    throw error;
+  }
+}
+  
 }
