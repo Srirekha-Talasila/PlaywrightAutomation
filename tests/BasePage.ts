@@ -485,5 +485,16 @@ async waitForLoadState(
   }
 }
 
+  async getTitle(): Promise<string> {
+  try {
+    const title = await this.page.title();
+    logger.info(`[${this.className}] 📄 Got page title: "${title}"`);
+    return title;
+  } catch (error) {
+    logger.error(`[${this.className}] ❌ Failed to get page title\n   Error: ${error}`);
+    throw error;
+  }
+}
+
   
 }
