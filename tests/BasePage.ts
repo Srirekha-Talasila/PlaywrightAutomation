@@ -495,6 +495,159 @@ async waitForLoadState(
     throw error;
   }
 }
+async getCount(locator: Locator, description?: string): Promise<number> {
+  const desc = description || locator.toString();
+  try {
+    logger.info(`[${this.className}] Getting count of elements: ${desc}`);
+    const count = await locator.count();
+    this.logSuccess('Get Count', desc);
+    return count;
+  } catch (error) {
+    this.logFailure('Get Count', error, desc);
+    throw error;
+  }
+}
 
+  // Assert element is visible
+  async expectVisible(locator: Locator, description?: string): Promise<void> {
+    const desc = description || locator.toString();
+    try {
+      await expect(locator).toBeVisible();
+      this.logSuccess('Expect Visible', desc);
+    } catch (error) {
+      this.logFailure('Expect Visible', error, desc);
+      throw error;
+    }
+  }
+
+  // Assert element is hidden
+  async expectHidden(locator: Locator, description?: string): Promise<void> {
+    const desc = description || locator.toString();
+    try {
+      await expect(locator).toBeHidden();
+      this.logSuccess('Expect Hidden', desc);
+    } catch (error) {
+      this.logFailure('Expect Hidden', error, desc);
+      throw error;
+    }
+  }
+
+  // Assert element is enabled
+  async expectEnabled(locator: Locator, description?: string): Promise<void> {
+    const desc = description || locator.toString();
+    try {
+      await expect(locator).toBeEnabled();
+      this.logSuccess('Expect Enabled', desc);
+    } catch (error) {
+      this.logFailure('Expect Enabled', error, desc);
+      throw error;
+    }
+  }
+
+  // Assert element is disabled
+  async expectDisabled(locator: Locator, description?: string): Promise<void> {
+    const desc = description || locator.toString();
+    try {
+      await expect(locator).toBeDisabled();
+      this.logSuccess('Expect Disabled', desc);
+    } catch (error) {
+      this.logFailure('Expect Disabled', error, desc);
+      throw error;
+    }
+  }
+
+  // Assert element has exact text
+  async expectText(locator: Locator, expectedText: string, description?: string): Promise<void> {
+    const desc = description || locator.toString();
+    try {
+      await expect(locator).toHaveText(expectedText);
+      this.logSuccess(`Expect Text: "${expectedText}"`, desc);
+    } catch (error) {
+      this.logFailure(`Expect Text: "${expectedText}"`, error, desc);
+      throw error;
+    }
+  }
+
+  // Assert element contains text (substring)
+  async expectTextContains(locator: Locator, expectedSubstring: string, description?: string): Promise<void> {
+    const desc = description || locator.toString();
+    try {
+      await expect(locator).toContainText(expectedSubstring);
+      this.logSuccess(`Expect Text Contains: "${expectedSubstring}"`, desc);
+    } catch (error) {
+      this.logFailure(`Expect Text Contains: "${expectedSubstring}"`, error, desc);
+      throw error;
+    }
+  }
+
+  // Assert element has attribute with exact value
+  async expectAttribute(locator: Locator, attribute: string, value: string, description?: string): Promise<void> {
+    const desc = description || locator.toString();
+    try {
+      await expect(locator).toHaveAttribute(attribute, value);
+      this.logSuccess(`Expect Attribute: ${attribute}="${value}"`, desc);
+    } catch (error) {
+      this.logFailure(`Expect Attribute: ${attribute}="${value}"`, error, desc);
+      throw error;
+    }
+  }
+
+  // Assert element has CSS class (exact or regex)
+  async expectClass(locator: Locator, className: string | RegExp, description?: string): Promise<void> {
+    const desc = description || locator.toString();
+    try {
+      await expect(locator).toHaveClass(className);
+      this.logSuccess(`Expect Class: ${className.toString()}`, desc);
+    } catch (error) {
+      this.logFailure(`Expect Class: ${className.toString()}`, error, desc);
+      throw error;
+    }
+  }
+
+  // Assert element has CSS property with expected value
+  async expectCSS(locator: Locator, property: string, value: string, description?: string): Promise<void> {
+    const desc = description || locator.toString();
+    try {
+      await expect(locator).toHaveCSS(property, value);
+      this.logSuccess(`Expect CSS: ${property}="${value}"`, desc);
+    } catch (error) {
+      this.logFailure(`Expect CSS: ${property}="${value}"`, error, desc);
+      throw error;
+    }
+  }
+
+  // Assert element count equals expected number
+  async expectCount(locator: Locator, expectedCount: number, description?: string): Promise<void> {
+    const desc = description || locator.toString();
+    try {
+      await expect(locator).toHaveCount(expectedCount);
+      this.logSuccess(`Expect Count: ${expectedCount}`, desc);
+    } catch (error) {
+      this.logFailure(`Expect Count: ${expectedCount}`, error, desc);
+      throw error;
+    }
+  }
+
+  // Assert page title exact match
+  async expectTitle(expectedTitle: string): Promise<void> {
+    try {
+      await expect(this.page).toHaveTitle(expectedTitle);
+      this.logSuccess('Expect Title', expectedTitle);
+    } catch (error) {
+      this.logFailure('Expect Title', error, expectedTitle);
+      throw error;
+    }
+  }
+
+  // Assert page URL contains substring or matches regex
+  async expectURL(expectedURL: string | RegExp): Promise<void> {
+    try {
+      await expect(this.page).toHaveURL(expectedURL);
+      this.logSuccess('Expect URL', expectedURL.toString());
+    } catch (error) {
+      this.logFailure('Expect URL', error, expectedURL.toString());
+      throw error;
+    }
+  }
   
 }
